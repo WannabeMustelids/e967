@@ -8,19 +8,29 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "Welcome!\n")
+var r = httprouter.New()
+
+func init() {
+	r.GET("/", Index)
+	r.GET("/hello/:name", Hello)
+
+	r.NotFound = http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.Header().Set("Content-Type", "text/html")
+		rw.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(rw, `Page not found. You should <a href="//%s">go back to the homepage.</a>`, req.Host)
+	})
+
+	http.Handle("/", r)
 }
 
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
+func Index(rw http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	fmt.Fprint(rw, "Dook!\n")
+}
+
+func Hello(rw http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+	fmt.Fprintf(rw, "Dook, %s!\n", ps.ByName("name"))
 }
 
 func main() {
-	router := httprouter.New()
-	router.GET("/", Index)
-	router.GET("/hello/:name", Hello)
-
-	log.Println("Running server on port 8080…")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8080", r))
 }
