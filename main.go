@@ -1,36 +1,33 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/julienschmidt/httprouter"
+	"text/template"
+	"time"
 )
 
-var r = httprouter.New()
-
-func init() {
-	r.GET("/", Index)
-	r.GET("/hello/:name", Hello)
-
-	r.NotFound = http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Header().Set("Content-Type", "text/html")
-		rw.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(rw, `Page not found. You should <a href="//%s">go back to the homepage.</a>`, req.Host)
-	})
-
-	http.Handle("/", r)
+type Submission struct {
+	Id      int
+	Created time.Time
+	Tags    []string
+	Unsafe  bool
 }
 
-func Index(rw http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	fmt.Fprint(rw, "Dook!\n")
-}
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles("index.html.tmpl"))
 
-func Hello(rw http.ResponseWriter, req *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(rw, "Dook, %s!\n", ps.ByName("name"))
+	data := []Submission{
+		{
+			Id:      1,
+			Tags:    []string{"test", "dummy"},
+			Created: time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
+		},
+	}
+	tmpl.Execute(w, data)
 }
 
 func main() {
-	log.Fatal(http.ListenAndServe("127.0.0.1:8080", r))
+	http.HandleFunc("/", defaultHandler)
+	log.Fatal(http.ListenAndServe("127.0.0.1:8080", nil))
 }
