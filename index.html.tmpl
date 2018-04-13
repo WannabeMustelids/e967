@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<title>Submission list</title>
+{{range .}}
+  #{{ .Id }}
+  {{with .Tags}} • {{range . }}{{.}} {{end}} {{end}}
+  (uploaded {{.Uploaded}})
+{{end}}
